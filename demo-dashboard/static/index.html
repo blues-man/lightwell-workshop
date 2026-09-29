@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lightwell SDLC — remediation dashboard</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>&#9889;</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="bolt">&#9889;</span>
+    <div>
+      <h1>Lightwell SDLC</h1>
+      <p class="sub">Supply-chain remediation, end to end</p>
+    </div>
+  </div>
+  <div class="tenant" id="tenant">
+    <span class="chip loading">connecting&hellip;</span>
+  </div>
+  <nav class="consoles" id="consoles"></nav>
+</header>
+
+<main>
+  <!-- ------------------------------------------------ packages -->
+  <section class="panel" id="packages-panel">
+    <div class="panel-head">
+      <div>
+        <h2>Remediated packages</h2>
+        <p class="hint">
+          Dependencies declared in the help-app <code>pom.xml</code>, matched against
+          the remediated builds published on the Lightwell network. Each version is a
+          <strong>one-shot trigger</strong> — Nexus emits <code>component CREATED</code>
+          only the first time it caches a component.
+        </p>
+      </div>
+      <button class="btn ghost" id="reload">Reload</button>
+    </div>
+
+    <div class="legend">
+      <span><i class="dot ok"></i>Ready to trigger</span>
+      <span><i class="dot used"></i>Already consumed</span>
+      <span><i class="dot bad"></i>Downgrade or superseded — do not use</span>
+      <span><i class="dot warn"></i>Cross-version — test the build first</span>
+    </div>
+
+    <div id="packages" class="packages">
+      <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ timeline -->
+  <section class="panel" id="run-panel">
+    <div class="panel-head">
+      <div>
+        <h2>Remediation flow</h2>
+        <p class="hint" id="run-sub">Trigger a package to watch the pipeline run.</p>
+      </div>
+      <select id="run-picker" class="picker" hidden></select>
+    </div>
+    <div id="timeline" class="timeline empty">
+      <p class="placeholder">
+        Nothing running. Pick a package above and press <strong>Remediate</strong> —
+        the six stages will appear here with a live link into each console.
+      </p>
+    </div>
+  </section>
+</main>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- confirmation -->
+<dialog id="confirm">
+  <h3>Trigger a real remediation?</h3>
+  <p id="confirm-body"></p>
+  <div class="note" id="confirm-note"></div>
+  <p class="warn-line">
+    This fetches the artifact through Nexus for real. It cannot be undone —
+    the version is consumed on this tenant whether or not the rest succeeds.
+  </p>
+  <form method="dialog" class="actions">
+    <button value="cancel" class="btn ghost">Cancel</button>
+    <button value="go" class="btn primary" id="confirm-go">Remediate</button>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

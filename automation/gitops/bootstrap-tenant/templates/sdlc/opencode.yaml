@@ -1,4 +1,11 @@
 {{- if .Values.sdlc.enabled }}
+{{- if or .Values.sdlc.llm.baseUrl .Values.sdlc.llm.model }}
+{{- $_ := required "Set sdlc.llm.baseUrl for LiteLLM" .Values.sdlc.llm.baseUrl }}
+{{- $_ := required "Set sdlc.llm.model for LiteLLM" .Values.sdlc.llm.model }}
+{{- if not (or .Values.sdlc.llm.apiKey .Values.sdlc.llm.existingSecret) }}
+{{- fail "Set sdlc.llm.apiKey or sdlc.llm.existingSecret for LiteLLM" }}
+{{- end }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,6 +81,10 @@ spec:
                 secretKeyRef:
                   name: {{ include "bootstrap-tenant.opencodeLlmSecretName" . }}
                   key: api_key
+            {{- end }}
+            {{- if .Values.sdlc.llm.baseUrl }}
+            - name: OPENCODE_CONFIG_CONTENT
+              value: {{ dict "model" (printf "litellm/%s" .Values.sdlc.llm.model) "provider" (dict "litellm" (dict "npm" "@ai-sdk/openai-compatible" "name" "LiteLLM" "options" (dict "baseURL" .Values.sdlc.llm.baseUrl "apiKey" "{env:OPENAI_API_KEY}") "models" (dict .Values.sdlc.llm.model (dict "name" .Values.sdlc.llm.model)))) | toJson | quote }}
             {{- end }}
           volumeMounts:
             - name: tmp-home

@@ -69,5 +69,14 @@ sdlc:
   opencodeServerUsername: opencode
   opencodeServerPassword: "" # default tenant password if empty
   llm:
+    baseUrl: "" # LiteLLM OpenAI-compatible API endpoint, including /v1
+    model: "" # model ID exposed by LiteLLM; used as litellm/{model}
     apiKey: "" # when set, chart creates secret opencode-llm (optional for demos)
     existingSecret: "" # e.g. opencode-llm — chart skips creating that Secret; still wires OPENAI_API_KEY
+  dashboard:
+    enabled: true
+    image: quay.io/bluesman/lightwell-demo-dashboard:v0.5.0
+    imagePullPolicy: IfNotPresent
+    aapUser: admin
+    lightwell:
+      url: https://packages.redhat.com/lightwell/java/remediated/

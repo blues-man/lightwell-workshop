@@ -1,0 +1,156 @@
+{{- if and .Values.sdlc.enabled .Values.sdlc.dashboard.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-dashboard
+  namespace: {{ include "bootstrap-tenant.sdlcNamespace" . }}
+  labels:
+    app: demo-dashboard
+    lightwell.guid: {{ .Values.guid | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-dashboard
+  template:
+    metadata:
+      labels:
+        app: demo-dashboard
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: dashboard
+          image: {{ .Values.sdlc.dashboard.image | quote }}
+          imagePullPolicy: {{ .Values.sdlc.dashboard.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: LW_GUID
+              value: {{ .Values.guid | quote }}
+            - name: LW_DOMAIN
+              value: {{ .Values.deployer.domain | quote }}
+            - name: LW_NEXUS_URL
+              value: {{ include "bootstrap-tenant.nexusRouteUrl" . | quote }}
+            - name: LW_NEXUS_REPO
+              value: {{ include "bootstrap-tenant.nexusRepoRemediated" . | quote }}
+            - name: LW_LIGHTWELL_URL
+              value: {{ .Values.sdlc.dashboard.lightwell.url | quote }}
+            - name: LW_LIGHTWELL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: dashboard-lightwell-network
+                  key: username
+            - name: LW_LIGHTWELL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dashboard-lightwell-network
+                  key: password
+            - name: LW_AAP_URL
+              value: {{ include "bootstrap-tenant.aapControllerUrl" . | quote }}
+            - name: LW_TPA_URL
+              value: {{ include "bootstrap-tenant.tpaUrl" . | quote }}
+            - name: LW_SSO_URL
+              value: {{ include "bootstrap-tenant.keycloakUrl" . | quote }}
+            - name: LW_GITLAB_URL
+              value: {{ include "bootstrap-tenant.gitlabHost" . | quote }}
+            - name: LW_OPENCODE_URL
+              value: {{ printf "https://opencode-ui-%s.%s" (include "bootstrap-tenant.sdlcNamespace" .) .Values.deployer.domain | quote }}
+            - name: LW_HELP_APP
+              value: {{ include "bootstrap-tenant.demoProjectPath" . | quote }}
+            - name: LW_HELP_APP_BRANCH
+              value: {{ .Values.gitlab.helpAppSeed.defaultBranch | quote }}
+            - name: LW_TPA_REALM
+              value: {{ .Values.keycloak.tpaRealm | quote }}
+            - name: LW_TPA_CLIENT
+              value: {{ .Values.tpa.uiClientId | quote }}
+            - name: LW_TENANT_USER
+              value: {{ .Values.username | quote }}
+            - name: LW_TENANT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opencode-server
+                  key: password
+            - name: LW_AAP_USER
+              value: {{ .Values.sdlc.dashboard.aapUser | quote }}
+            - name: LW_AAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: aap-admin-password
+                  key: password
+            - name: LW_GITLAB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gitlab-root-pat
+                  key: token
+            - name: LW_DASHBOARD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opencode-server
+                  key: password
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/dashboard
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: state
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-dashboard
+  namespace: {{ include "bootstrap-tenant.sdlcNamespace" . }}
+  labels:
+    app: demo-dashboard
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  selector:
+    app: demo-dashboard
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: demo-dashboard
+  namespace: {{ include "bootstrap-tenant.sdlcNamespace" . }}
+  labels:
+    app: demo-dashboard
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  to:
+    kind: Service
+    name: demo-dashboard
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+{{- end }}

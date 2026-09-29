@@ -1,0 +1,54 @@
+{{- if and .Values.sdlc.enabled .Values.sdlc.dashboard.enabled }}
+# The dashboard needs to list all AAP jobs and EDA activations. The tenant
+# account sees an empty list, so copy the shared AAP admin password to its
+# namespace before starting the dashboard Deployment.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sync-aap-admin-password
+  namespace: {{ include "bootstrap-tenant.jobNamespace" . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 8
+  template:
+    spec:
+      serviceAccountName: lightwell-tenant-jobs
+      restartPolicy: OnFailure
+      containers:
+        - name: sync-aap-admin-password
+          image: {{ .Values.jobAnsibleImage | quote }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              AAP_NS="{{ .Values.aap.namespace }}"
+              SDLC_NS="{{ include "bootstrap-tenant.sdlcNamespace" . }}"
+              PASSWORD_B64=""
+              for i in $(seq 1 60); do
+                PASSWORD_B64=$(oc get secret aap-admin-password -n "${AAP_NS}" -o jsonpath='{.data.password}' 2>/dev/null || true)
+                if [ -n "${PASSWORD_B64}" ]; then break; fi
+                echo "Waiting for AAP admin password (${i}/60)..."
+                sleep 10
+              done
+              if [ -z "${PASSWORD_B64}" ]; then
+                echo "ERROR: secret/${AAP_NS}/aap-admin-password missing"
+                exit 1
+              fi
+              CURRENT=$(oc get secret aap-admin-password -n "${SDLC_NS}" -o jsonpath='{.data.password}' 2>/dev/null || true)
+              if [ "${CURRENT}" = "${PASSWORD_B64}" ]; then
+                echo "aap-admin-password already current in ${SDLC_NS}"
+                exit 0
+              fi
+              RAW=$(printf '%s' "${PASSWORD_B64}" | base64 -d)
+              oc create secret generic aap-admin-password -n "${SDLC_NS}" \
+                --from-literal=password="${RAW}" \
+                --dry-run=client -o yaml | oc apply -f -
+              echo "aap-admin-password updated in ${SDLC_NS}"
+              if oc get deploy demo-dashboard -n "${SDLC_NS}" >/dev/null 2>&1; then
+                oc rollout restart deploy/demo-dashboard -n "${SDLC_NS}"
+              fi
+{{- end }}

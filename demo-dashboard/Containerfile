@@ -1,0 +1,15 @@
+FROM registry.access.redhat.com/ubi9/python-312:latest
+
+WORKDIR /opt/app
+COPY server.py ./server.py
+COPY static/ ./static/
+
+# OpenShift may assign a random non-root UID. All application files are read-only;
+# the deployment mounts a writable emptyDir at LW_STATE_DIR.
+ENV PORT=8080 \
+    BIND=0.0.0.0 \
+    LW_STATE_DIR=/var/lib/dashboard \
+    PYTHONDONTWRITEBYTECODE=1
+EXPOSE 8080
+USER 1001
+CMD ["python3", "server.py"]
