@@ -75,7 +75,7 @@ sdlc:
     existingSecret: "" # e.g. opencode-llm — chart skips creating that Secret; still wires OPENAI_API_KEY
   dashboard:
     enabled: true
-    image: quay.io/bluesman/lightwell-demo-dashboard:v0.5.0
+    image: quay.io/bluesman/lightwell-demo-dashboard:v0.5.1
     imagePullPolicy: IfNotPresent
     aapUser: admin
     lightwell:

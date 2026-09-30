@@ -2,7 +2,7 @@
 
 Deployed once per tenant order via AgnosticV → Argo CD (`ocp4_workload_gitops_bootstrap` path `automation/gitops/bootstrap-tenant`).
 
-Chart **v0.5.0** provisions T1–T4 plus the **SDLC control plane** (OpenCode, EDA bootstrap, Nexus webhooks, dashboard) in one release. T0 AgnosticV wiring is outside the chart.
+Chart **v0.5.1** provisions T1–T4 plus the **SDLC control plane** (OpenCode, EDA bootstrap, Nexus webhooks, dashboard) in one release. T0 AgnosticV wiring is outside the chart.
 
 ## What this chart creates
 
@@ -79,7 +79,7 @@ sdlc:
     existingSecret: opencode-llm  # Secret key: api_key
   dashboard:
     enabled: true
-    image: quay.io/bluesman/lightwell-demo-dashboard:v0.5.0
+    image: quay.io/bluesman/lightwell-demo-dashboard:v0.5.1
     lightwell:
       url: https://packages.redhat.com/lightwell/java/remediated/
 ```

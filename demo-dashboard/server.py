@@ -571,7 +571,7 @@ def collect_run(cfg: Config, run: dict) -> list[dict]:
     status, data = http(f"{cfg.aap}/api/eda/v1/activations/", headers=cfg.aap_headers())
     if status == 200 and isinstance(data, dict) and data.get("results"):
         a = data["results"][0]
-        s["console"] = f"{cfg.aap}/eda/rulebook-activations/{a['id']}/history"
+        s["console"] = f"{cfg.aap}/decisions/rulebook-activations/{a['id']}/details"
         s["detail"] = f"activation {a['name']} is {a.get('status')}"
         if a.get("status") == "running":
             s["state"] = "done"
