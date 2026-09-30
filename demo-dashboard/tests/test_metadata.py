@@ -16,6 +16,20 @@ spec.loader.exec_module(dashboard)
 
 
 class MetadataTest(TestCase):
+    def test_inventory_excludes_test_scoped_dependencies(self):
+        cfg = SimpleNamespace(
+            project_api="https://gitlab.example.test/api/v4/projects/1",
+            branch="main",
+            gitlab_headers=lambda: {},
+        )
+        pom = b'''<project xmlns="http://maven.apache.org/POM/4.0.0"><dependencies>
+          <dependency><groupId>org.apache.httpcomponents</groupId><artifactId>httpclient</artifactId><version>4.5.12</version></dependency>
+          <dependency><groupId>junit</groupId><artifactId>junit</artifactId><version>4.13</version><scope>test</scope></dependency>
+        </dependencies></project>'''
+        with patch.object(dashboard, "http", return_value=(200, pom)):
+            dependencies = dashboard.declared_dependencies(cfg)
+        self.assertEqual([d["artifact"] for d in dependencies], ["httpclient"])
+
     def test_lightwell_metadata_uses_basic_auth_without_fetching_a_component(self):
         cfg = SimpleNamespace(
             lightwell="https://packages.example.test/lightwell/java/remediated",

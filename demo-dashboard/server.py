@@ -398,6 +398,11 @@ def declared_dependencies(cfg: Config) -> list[dict]:
 
     out, seen = [], set()
     for dep in root.findall(".//m:dependencies/m:dependency", ns):
+        # The smoke test reads the running app's /api/status. Test and provided
+        # dependencies cannot appear there, even when Lightwell has a fix.
+        scope = resolve(dep.findtext("m:scope", "", ns))
+        if scope not in ("", "compile", "runtime"):
+            continue
         gid = resolve(dep.findtext("m:groupId", "", ns))
         aid = resolve(dep.findtext("m:artifactId", "", ns))
         ver = resolve(dep.findtext("m:version", "", ns))
