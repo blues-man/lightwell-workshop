@@ -54,7 +54,7 @@ nexus:
 sdlc:
   enabled: true
   namespace: "" # default sdlc-{guid}; set sdlc-control-plane only for legacy single-tenant labs
-  scmUrl: https://github.com/sshaaf/lw-sdlc-opencode.git # must contain rulebooks/ for EDA import
+  scmUrl: https://github.com/blues-man/lw-sdlc-opencode.git # must contain rulebooks/ for EDA import
   projectName: "" # default SDLC {guid}
   activationName: "" # default sdlc-remediation-{guid}
   decisionEnvName: "SDLC Decision Environment"

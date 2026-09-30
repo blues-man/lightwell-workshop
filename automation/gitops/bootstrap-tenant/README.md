@@ -2,7 +2,7 @@
 
 Deployed once per tenant order via AgnosticV → Argo CD (`ocp4_workload_gitops_bootstrap` path `automation/gitops/bootstrap-tenant`).
 
-Chart **v0.5.2** provisions T1–T4 plus the **SDLC control plane** (OpenCode, EDA bootstrap, Nexus webhooks, dashboard) in one release. T0 AgnosticV wiring is outside the chart.
+Chart **v0.5.3** provisions T1–T4 plus the **SDLC control plane** (OpenCode, EDA bootstrap, Nexus webhooks, dashboard) in one release. T0 AgnosticV wiring is outside the chart.
 
 ## What this chart creates
 
