@@ -772,10 +772,15 @@ class Handler(SimpleHTTPRequestHandler):
             if route == "/api/packages":
                 return self._json({"packages": build_inventory(cfg)})
             if route == "/api/runs":
-                return self._json({"runs": Handler.runs})
+                with Handler.lock:
+                    Handler.runs = load_runs()
+                    runs = list(Handler.runs)
+                return self._json({"runs": runs})
             if route.startswith("/api/run/"):
                 rid = route.rsplit("/", 1)[-1]
-                run = next((r for r in Handler.runs if r["id"] == rid), None)
+                with Handler.lock:
+                    Handler.runs = load_runs()
+                    run = next((r for r in Handler.runs if r["id"] == rid), None)
                 if not run:
                     return self._json({"error": "no such run"}, 404)
                 return self._json({"run": run, "steps": collect_run(cfg, run)})
@@ -805,6 +810,7 @@ class Handler(SimpleHTTPRequestHandler):
                "started_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
                "fetched": fetched}
         with Handler.lock:
+            Handler.runs = load_runs()
             Handler.runs.insert(0, run)
             save_runs(Handler.runs)
         return self._json({"run": run})

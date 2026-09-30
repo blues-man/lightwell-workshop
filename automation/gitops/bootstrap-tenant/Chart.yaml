@@ -3,5 +3,5 @@ name: bootstrap-tenant
 description: >-
   Per-tenant lab resources — app namespace, dedicated Nexus instance, OpenShift RBAC.
 type: application
-version: 0.5.1
+version: 0.5.2
 appVersion: "1.0.0"
