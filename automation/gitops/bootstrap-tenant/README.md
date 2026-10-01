@@ -160,4 +160,29 @@ helm template tenant-test automation/gitops/bootstrap-tenant/ \
 LIGHTWELL_RESET_GUID=demo1 ./automation/gitops/bootstrap-infra/scripts/reset-lightwell-platform.sh
 ```
 
+## Reset packages for another dashboard demo
+
+From the repository root, with `oc` logged in to the tenant cluster:
+
+```bash
+./clean-repo.py httpclient --dry-run     # inspect one package's cleanup plan
+./clean-repo.py httpclient               # reset one package
+./clean-repo.py json-path                # distinct from org.json:json
+./clean-repo.py --dry-run                # inspect all tracked packages
+./clean-repo.py                          # reset all tracked packages
+```
+
+Use `--guid <guid>` when the cluster has multiple Lightwell tenants, or
+`--context <oc-context>` to select a cluster explicitly. The script reads the
+tenant's GitLab and Nexus credentials from OpenShift Secrets in memory; it does
+not use `.env.secrets` or print tokens. If the lab Route certificate is not
+trusted locally, add `--insecure`.
+
+Cleanup closes matching GitLab MRs, deletes their source branches, removes
+their verifier Jobs and `pr-test-mr-*` namespaces, deletes only matching
+`.rhlw-` components from the tenant's remediated Nexus repository, and clears
+matching dashboard run entries while preserving other packages' entries.
+Historical AAP jobs, OpenCode sessions, and TPA SBOMs remain available for
+inspection. Re-running the script is safe after a partial cleanup.
+
 Provisioning plan: [`../TENANT-PROVISIONING.md`](../TENANT-PROVISIONING.md).
